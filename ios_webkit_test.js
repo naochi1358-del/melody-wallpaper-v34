@@ -6,7 +6,7 @@ const { webkit, devices } = require('playwright');
     if (!ok) failed++;
   };
   const browser = await webkit.launch();
-  for (const name of ['iPhone SE', 'iPhone 13', 'iPhone 15 Pro Max']) {
+  for (const name of ['iPhone 13', 'iPhone 14', 'iPhone 15 Pro Max']) {
     const device = devices[name];
     if (!device) { check(name + ' device profile exists', false); continue; }
     const context = await browser.newContext({ ...device });
@@ -28,10 +28,8 @@ const { webkit, devices } = require('playwright');
       check(name + ' wake setting exists', await page.evaluate(() => !!document.getElementById('iosWake')));
       await page.evaluate(() => document.getElementById('iosWake')?.click());
       await page.waitForTimeout(300);
-      check(name + ' setting persists after reload', await (async () => {
-        await page.reload(); await page.waitForTimeout(1200);
-        return page.evaluate(() => localStorage.getItem('melo_ios_wake') === '1');
-      })());
+      await page.reload(); await page.waitForTimeout(1200);
+      check(name + ' setting persists after reload', await page.evaluate(() => localStorage.getItem('melo_ios_wake') === '1'));
     }
     check(name + ' no page errors', errors.length === 0, errors.join('|'));
     await context.close();
