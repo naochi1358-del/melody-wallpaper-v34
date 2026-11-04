@@ -12,6 +12,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   webkit-test:
+    if: ${{ hashFiles('index.html') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +25,7 @@ jobs:
       - run: sleep 2 && node ios_webkit_test.js
   deploy:
     needs: webkit-test
+    if: ${{ needs.webkit-test.result == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
