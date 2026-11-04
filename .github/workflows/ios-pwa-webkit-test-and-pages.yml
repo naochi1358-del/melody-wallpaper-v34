@@ -2,6 +2,11 @@ name: iOS PWA WebKit test and Pages
 on:
   push:
     branches: [ios-pwa]
+    paths:
+      - 'index.html'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'icons/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,7 +17,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   webkit-test:
-    if: ${{ hashFiles('index.html') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
