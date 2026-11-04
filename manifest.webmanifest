@@ -1,0 +1,14 @@
+{
+  "id": "./iphone.html",
+  "name": "マイメロ生活壁紙",
+  "short_name": "マイメロ壁紙",
+  "lang": "ja",
+  "start_url": "./iphone.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8dce8",
+  "theme_color": "#f8dce8",
+  "icons": [
+    { "src": "./icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
