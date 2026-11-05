@@ -17,28 +17,39 @@ concurrency:
   cancel-in-progress: true
 jobs:
   webkit-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: 配信用ファイルがそろっているか
+        run: |
+          for f in index.html manifest.webmanifest sw.js icons/apple-touch-icon.png icons/icon-192.png icons/icon-512.png; do test -s "$f" || { echo "MISSING $f"; exit 1; }; done
+          grep -q 'id="iosWake"\|iosWake' index.html
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm install --no-save playwright@1.56.0
       - run: npx playwright install --with-deps webkit
-      - run: python3 -m http.server 8765 --directory . >/tmp/pwa-server.log 2>&1 &
-      - run: sleep 2 && node ios_webkit_test.js
+      - name: WebKitテスト（サーバー起動とテストを同じ手順内で）
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/pwa-server.log 2>&1 &
+          sleep 2
+          node ios_webkit_test.js
   deploy:
     needs: webkit-test
-    if: ${{ needs.webkit-test.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: 配信するファイルだけを集める
+        run: |
+          mkdir -p _site
+          cp index.html manifest.webmanifest sw.js _site/
+          cp -r icons _site/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
