@@ -20,8 +20,7 @@
  document.addEventListener('visibilitychange',wake);
  function addPanel(){try{
    const panel=document.getElementById('panel');if(!panel||document.getElementById('iosWakeRow'))return;
-   const hs=[...panel.querySelectorAll('h4')];
-   const h4=hs.find(x=>x.textContent.indexOf('時計・表示')>=0);
+   const h4=[...panel.querySelectorAll('h4')].find(x=>x.textContent.indexOf('時計・表示')>=0);
    if(!h4)return;
    const row=document.createElement('div');row.id='iosWakeRow';row.className='row';
    const b=document.createElement('button');b.className='pb';b.id='iosWake';b.textContent='画面を自動でオフにしない（iPhone）ON/OFF';
@@ -34,7 +33,16 @@
  const mo=new MutationObserver(addPanel);
  document.addEventListener('DOMContentLoaded',()=>{addPanel();mo.observe(document.getElementById('panel')||document.body,{childList:true,subtree:true})});
  if(document.readyState!=='loading'){addPanel();try{mo.observe(document.getElementById('panel')||document.body,{childList:true,subtree:true})}catch(e){}}
+ let swStatus='not-started',swError='';
+ async function registerSw(){
+   if(!('serviceWorker' in navigator)){swStatus='unsupported';return}
+   try{
+     const reg=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
+     swStatus=reg.active?'active':(reg.installing?'installing':'registered');
+     if(reg.installing)reg.installing.addEventListener('statechange',()=>{swStatus=reg.active?'active':reg.installing?.state||'installing'});
+   }catch(e){swStatus='error';swError=String(e&&e.message||e)}
+ }
+ if(document.readyState==='complete')registerSw();else addEventListener('load',registerSw,{once:true});
  wake();
- try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}catch(e){}
- window.__ios=()=>({ver:'35',wake:LS.g('melo_ios_wake')==='1',hasLock:!!lock,silentAudio:!!silent});
+ window.__ios=()=>({ver:'35',wake:LS.g('melo_ios_wake')==='1',hasLock:!!lock,silentAudio:!!silent,swStatus,swError});
 })();

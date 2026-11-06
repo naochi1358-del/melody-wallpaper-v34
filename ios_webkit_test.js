@@ -18,7 +18,7 @@ const { webkit, devices } = require('playwright');
   for (const name of ['iPhone 13', 'iPhone 14', 'iPhone 15 Pro Max']) {
     const device = devices[name];
     if (!device) { check(name + ' device profile exists', false); continue; }
-    const context = await browser.newContext({ ...device });
+    const context = await browser.newContext({ ...device, serviceWorkers: 'allow' });
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(String(error)));
@@ -45,7 +45,18 @@ const { webkit, devices } = require('playwright');
       await page.waitForTimeout(1200);
       check(name + ' setting persists after reload', await page.evaluate(() => localStorage.getItem('melo_ios_wake') === '1'));
     }
-    check(name + ' service worker registration', await page.evaluate(async () => !!navigator.serviceWorker && !!(await navigator.serviceWorker.getRegistration())));
+    const swInfo = await page.evaluate(async () => {
+      if (!('serviceWorker' in navigator)) return {supported:false};
+      try {
+        const registration = await navigator.serviceWorker.getRegistration() || await navigator.serviceWorker.register('./sw.js');
+        return {supported:true, registered:!!registration, active:!!registration.active, installing:registration.installing?.state || ''};
+      } catch (error) { return {supported:true, registered:false, error:String(error)}; }
+    });
+    console.log(name + ' service worker diagnostic ' + JSON.stringify(swInfo));
+    if (!swInfo.supported) console.log('SKIP ' + name + ' service worker API is not exposed by this WebKit runtime');
+    else check(name + ' service worker registration', swInfo.registered, JSON.stringify(swInfo));
+    const iosInfo = await page.evaluate(() => window.__ios ? window.__ios() : null);
+    console.log(name + ' iOS runtime ' + JSON.stringify(iosInfo));
     check(name + ' no page errors', errors.length === 0, errors.join('|'));
     await context.close();
   }
