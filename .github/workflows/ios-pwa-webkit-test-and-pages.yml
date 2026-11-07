@@ -58,7 +58,7 @@ jobs:
     if: ${{ needs.webkit-test.result == 'success' }}
     runs-on: ubuntu-24.04
     environment:
-      name: github-pages
+      name: github-pages-ios-pwa
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
