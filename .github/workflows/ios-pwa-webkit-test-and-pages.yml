@@ -79,6 +79,9 @@ jobs:
           cp -r icons _site/
       - uses: actions/upload-pages-artifact@v3
         with:
+          name: github-pages-ios-pwa
           path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-ios-pwa
